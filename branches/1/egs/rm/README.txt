@@ -13,3 +13,4 @@ scripts for a sequence of experiments.
       Maximum Likelihood 
       techniques including global and speaker-specific transforms.
       See a parallel setup in ../wsj/s1
+
