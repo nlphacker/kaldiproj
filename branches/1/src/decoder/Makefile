@@ -3,9 +3,6 @@ all:
 EXTRA_CXXFLAGS = -Wno-sign-compare -O3
 include ../kaldi.mk
 
-# Removing kaldi-decoder-test because it doesn't work without access
-# to certain files...
-#TESTFILES =  kaldi-decoder-test
 TESTFILES = 
 
 OBJFILES = decodable-am-diag-gmm.o training-graph-compiler.o decodable-am-sgmm.o
