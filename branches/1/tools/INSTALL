@@ -31,7 +31,7 @@ gcc -o sph2pipe *.c -lm
 cd ..
 
 # These instructions are not valid for native Windows;
-# see the reame, 0readme.1st, in sph2pipe_v2.5
+# see the readme, 0readme.1st, in sph2pipe_v2.5
 
 ####
 (2)
@@ -110,10 +110,11 @@ ACLOCAL=/bin/aclocal-1.9
 AUTOMAKE=/bin/automake-1.9 
 ... however, the defaults may work.
 ]
-./regenerate-makefiles.sh  # try this again if it doesn't work.
+./regenerate-makefiles.sh  
+./regenerate-makefiles.sh  # run this twice; it seems to be necessary.
 ./configure --prefix=`pwd`
-or for 64 bit cross-compilation (tested on BUT machines)
-./configure --prefix=`pwd` CC="x86_64-linux-gcc" CXX="x86_64-linux-g++" AR="x86_64-linux-ar" AS="x86_64-linux-as" RANLIB="x86_64-linux-ranlib"
+#or for 64 bit cross-compilation (tested on BUT machines)
+#./configure --prefix=`pwd` CC="x86_64-linux-gcc" CXX="x86_64-linux-g++" AR="x86_64-linux-ar" AS="x86_64-linux-as" RANLIB="x86_64-linux-ranlib"
 [ you may have to install zlib before typing make ]
 make
 make install
@@ -163,7 +164,7 @@ tar -xovzf atlas3.8.3.tar.gz ATLAS/include
    already there).
 mkdir CLAPACK_include
 cd CLAPACK_include
-for x in  clapack.h	f2c.h; do 
+for x in  clapack.h	f2c.h cblas.h; do 
   wget http://www.netlib.org/clapack/$x; 
 done
 
