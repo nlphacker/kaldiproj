@@ -138,7 +138,7 @@ template<class Arc>  void TestFactor() {
     }
 
     Map(fwfst, &ofst_star, FromGallicMapper<Arc, STRING_LEFT>());
-
+    
     {
       std::cout <<" printing after converting back to regular FST\n";
       FstPrinter<Arc> fstprinter(ofst_star, sptr, sptr, NULL, false, true);
@@ -179,7 +179,7 @@ template<class Arc, class inttype> void TestStringRepository() {
   }
 
   for (size_t i = 0;i < N;i++) {
-    std::vector<Label> tmpv;
+    vector<Label> tmpv;
     tmpv.push_back(10);  // just put in garbage.
     sr.SeqOfId(ids[i], &tmpv);
     assert(tmpv == strings[i]);

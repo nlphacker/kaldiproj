@@ -31,13 +31,16 @@ namespace fst {
 
 
 template<class Arc, class LabelT>
-typename ContextFstImpl<Arc, LabelT>::StateId ContextFstImpl<Arc, LabelT>::FindState(const std::vector<LabelT> &seq) {
-  // Finds state-id corresponding to this vector of phones.  Inserts it if necessary.
+typename ContextFstImpl<Arc, LabelT>::StateId
+   ContextFstImpl<Arc, LabelT>::FindState(const vector<LabelT> &seq) {
+  // Finds state-id corresponding to this vector of phones.  Inserts it if
+  // necessary.
   assert(static_cast<int32>(seq.size()) == N_-1);
   VectorToStateIter iter = state_map_.find(seq);
   if (iter == state_map_.end()) {  // Not already in map.
     StateId this_state_id = (StateId)state_seqs_.size();
-    StateId this_state_id_check = CacheImpl<Arc>::AddState();  // goes back to VectorFstBaseImpl<Arc>, inherited via CacheFst<Arc>
+    StateId this_state_id_check = CacheImpl<Arc>::AddState();
+    // goes back to VectorFstBaseImpl<Arc>, inherited via CacheFst<Arc>
     assert(this_state_id == this_state_id_check);
     state_seqs_.push_back(seq);
     state_map_[seq] = this_state_id;
@@ -49,7 +52,7 @@ typename ContextFstImpl<Arc, LabelT>::StateId ContextFstImpl<Arc, LabelT>::FindS
 
 template<class Arc, class LabelT>
 typename ContextFstImpl<Arc, LabelT>::Label
-ContextFstImpl<Arc, LabelT>::FindLabel(const std::vector<LabelT> &label_vec) {
+ContextFstImpl<Arc, LabelT>::FindLabel(const vector<LabelT> &label_vec) {
   // Finds ilabel corresponding to this information.. Creates new ilabel if necessary.
   VectorToLabelIter iter = ilabel_map_.find(label_vec);
   if (iter == ilabel_map_.end()) {  // Not already in map.
@@ -66,7 +69,7 @@ ContextFstImpl<Arc, LabelT>::FindLabel(const std::vector<LabelT> &label_vec) {
 template<class Arc, class LabelT>
 typename ContextFstImpl<Arc, LabelT>::StateId ContextFstImpl<Arc, LabelT>::Start() {
   if (! CacheImpl<Arc>::HasStart()) {
-    std::vector<LabelT> vec(N_-1, 0);  // Vector of N_-1 epsilons. [e.g. N = 3].
+    vector<LabelT> vec(N_-1, 0);  // Vector of N_-1 epsilons. [e.g. N = 3].
     StateId s = FindState(vec);
     assert(s == 0);
     SetStart(s);
@@ -80,14 +83,15 @@ template<class Arc, class LabelT>
 ContextFstImpl<Arc, LabelT>::ContextFstImpl(const ContextFstImpl &other):
     phone_syms_(other.phone_syms_),
     disambig_syms_(other.disambig_syms_) {
-  KALDI_ERR << "ContextFst copying not yet supported [not hard, but would have to test.]";
+  std::cerr << "ContextFst copying not yet supported [not hard, but would have to test.]";
+  exit(1);
 }
 
 
 template<class Arc, class LabelT>
 ContextFstImpl<Arc, LabelT>::ContextFstImpl(Label subsequential_symbol,  // epsilon not allowed.
-                                            const std::vector<LabelT>& phone_syms,  // on output side of ifst.
-                                            const std::vector<LabelT>& disambig_syms,  // on output
+                                            const vector<LabelT>& phone_syms,  // on output side of ifst.
+                                            const vector<LabelT>& disambig_syms,  // on output
                                             int N,
                                             int P):
     phone_syms_(phone_syms),  disambig_syms_(disambig_syms), subsequential_symbol_(subsequential_symbol) ,
@@ -108,7 +112,7 @@ ContextFstImpl<Arc, LabelT>::ContextFstImpl(Label subsequential_symbol,  // epsi
 
   assert(disambig_syms_.count(subsequential_symbol_) == 0 && phone_syms_.count(subsequential_symbol_) == 0);
 
-  std::vector<LabelT> eps_vec;  // empty vec.
+  vector<LabelT> eps_vec;  // empty vec.
   // Make sure the symbol that equates to epsilon is zero in our numbering.
   Label eps_id = FindLabel(eps_vec);  // this function will add it to the input
   // symbol table, if necessary.
@@ -123,7 +127,7 @@ ContextFstImpl<Arc, LabelT>::ContextFstImpl(Label subsequential_symbol,  // epsi
     // and the fact that if a disambig symbol appears at the very start of a sequence in
     // CLG, it's not clear exatly where it appeared on the corresponding sequence at
     // the input of LG.
-    std::vector<LabelT> pseudo_eps_vec;
+    vector<LabelT> pseudo_eps_vec;
     pseudo_eps_vec.push_back(0);
     pseudo_eps_symbol_= FindLabel(pseudo_eps_vec);  // this function will add it to the input
     // symbol table, if necessary.
@@ -137,7 +141,7 @@ template<class Arc, class LabelT>
 typename ContextFstImpl<Arc, LabelT>::Weight ContextFstImpl<Arc, LabelT>::Final(StateId s) {
   assert(static_cast<size_t>(s) < state_seqs_.size());  // make sure state exists already.
   if (!HasFinal(s)) {  // Work out final-state weight.
-    const std::vector<LabelT> &seq = state_seqs_[s];
+    const vector<LabelT> &seq = state_seqs_[s];
 
     bool final_ok;
     assert(static_cast<int32>(seq.size()) == N_-1);
@@ -190,7 +194,7 @@ void ContextFstImpl<Arc, LabelT>::CreateDisambigArc(StateId s,
                                                    Label olabel,
                                                    Arc *oarc) {  // called from CreateArc.
   // Creates a self-loop arc corresponding to the disambiguation symbol.
-  std::vector<LabelT> label_info;  // (olabel);
+  vector<LabelT> label_info;  // (olabel);
   label_info.push_back(-olabel);  // olabel is a disambiguation symbol.  Use its negative
   // so we can easily distinguish them.
   Label ilabel = FindLabel(label_info);
@@ -204,7 +208,7 @@ template<class Arc, class LabelT>
 bool ContextFstImpl<Arc, LabelT>::CreatePhoneOrEpsArc(StateId src,
                                                      StateId dst,
                                                      Label olabel,
-                                                     const std::vector<LabelT> &phone_seq,
+                                                     const vector<LabelT> &phone_seq,
                                                      Arc *oarc) {
   // called from CreateArc.
   // creates the arc with a phone's state on its input labels (or epsilon).
@@ -212,7 +216,7 @@ bool ContextFstImpl<Arc, LabelT>::CreatePhoneOrEpsArc(StateId src,
   // returns false if it could not create an arc due to the decision-tree returning false
   // [this only happens if opts_.behavior_on_failure == ContextFstOptions::kNoArc].
 
-  KALDI_ASSERT(phone_seq[P_] != subsequential_symbol_);  // would be coding error.
+  assert(phone_seq[P_] != subsequential_symbol_);  // would be coding error.
 
   if (phone_seq[P_] == 0) {  // this can happen at the beginning of the graph.
     // we don't output a real phone.  Epsilon arc (but sometimes we need to
@@ -244,7 +248,7 @@ bool ContextFstImpl<Arc, LabelT>::CreateArc(StateId s,
 
   if (olabel == 0) return false;  // No epsilon arcs in this FST.
 
-  const std::vector<LabelT> &seq = state_seqs_[s];
+  const vector<LabelT> &seq = state_seqs_[s];
 
   if (IsDisambigSymbol(olabel)) {  // Disambiguation-symbol arcs.. create self-loop.
     CreateDisambigArc(s, olabel, oarc);
@@ -262,11 +266,11 @@ bool ContextFstImpl<Arc, LabelT>::CreateArc(StateId s,
       return false;
     }
 
-    std::vector<LabelT> newseq(N_-1);  // seq shifted left by 1.
+    vector<LabelT> newseq(N_-1);  // seq shifted left by 1.
     for (int i = 0;i < N_-2;i++) newseq[i] = seq[i+1];
     if (N_ > 1) newseq[N_-2] = olabel;
 
-    std::vector<LabelT> phoneseq(seq);  // copy it before FindState which
+    vector<LabelT> phoneseq(seq);  // copy it before FindState which
     // possibly changes the address.
     StateId nextstate = FindState(newseq);
 
@@ -276,8 +280,9 @@ bool ContextFstImpl<Arc, LabelT>::CreateArc(StateId s,
     // the output arcs, just 0.
     return CreatePhoneOrEpsArc(s, nextstate, olabel, phoneseq, oarc);
   } else {
-    KALDI_ERR << "ContextFst: CreateArc, invalid olabel supplied [confusion about phone list or disambig symbols?]: "<<(olabel);
-  }
+    std::cerr << "ContextFst: CreateArc, invalid olabel supplied [confusion about phone list or disambig symbols?]: "<<(olabel);
+    exit(1);
+ }
   return false;  // won't get here.  suppress compiler error.
 }
 
@@ -351,7 +356,7 @@ void AddSubsequentialLoop(typename Arc::Label subseq_symbol,
   typedef typename Arc::StateId StateId;
   typedef typename Arc::Weight Weight;
 
-  std::vector<StateId> final_states;
+  vector<StateId> final_states;
   for (StateIterator<MutableFst<Arc> > siter(*fst); !siter.Done(); siter.Next()) {
     StateId s = siter.Value();
     if (fst->Final(s) != Weight::Zero())  final_states.push_back(s);
@@ -375,7 +380,7 @@ void AddSubsequentialLoop(typename Arc::Label subseq_symbol,
 
 template<class I>
 void WriteILabelInfo(std::ostream &os, bool binary,
-                     const std::vector<std::vector<I> > &info) {
+                     const vector<vector<I> > &info) {
   I sz = info.size();
   kaldi::WriteBasicType(os, binary, sz);
   for (I i = 0; i < sz; i++) {
@@ -386,7 +391,7 @@ void WriteILabelInfo(std::ostream &os, bool binary,
 
 template<class I>
 void ReadILabelInfo(std::istream &is, bool binary,
-                    std::vector<std::vector<I> > *info) {
+                    vector<vector<I> > *info) {
   I sz = info->size();
   kaldi::ReadBasicType(is, binary, &sz);
   assert(info != NULL);
@@ -398,7 +403,7 @@ void ReadILabelInfo(std::istream &is, bool binary,
 
 // Type I must be signed.
 template<class I>
-SymbolTable *CreateILabelInfoSymbolTable(const std::vector<std::vector<I> > &info,
+SymbolTable *CreateILabelInfoSymbolTable(const vector<vector<I> > &info,
                                          const SymbolTable &phones_symtab,
                                          std::string separator,
                                          std::string disambig_prefix) {  // e.g. separator = "/", disambig_prefix = "#"
@@ -410,59 +415,68 @@ SymbolTable *CreateILabelInfoSymbolTable(const std::vector<std::vector<I> > &inf
   assert(s == 0);
   int num_disambig_seen = 0;  // not counting #-1
   for (size_t i = 1; i < info.size(); i++) {
-    if (info[i].size() == 0)
-      KALDI_ERR << "CreateILabelInfoSymbolTable: invalid ilabel-info";
+    if (info[i].size() == 0) {
+      std::cerr << "CreateILabelInfoSymbolTable: invalid ilabel-info";
+      exit(1);
+    }
     if (info[i].size() == 1 &&
        info[i][0] <= 0) {
       if (info[i][0] == 0) {  // special symbol at start that we want to call #-1.
         std::string sym = disambig_prefix + "-1";
         s = ans->AddSymbol(disambig_prefix + "-1");
-        if (s != i)
-          KALDI_ERR << "Disambig symbol "<< sym << " already in vocab\n";  // should never happen.
+        if (s != i) {
+          std::cerr << "Disambig symbol "<< sym << " already in vocab\n";  // should never happen.
+          exit(1);
+        }
       } else {
         char buf[100];
         snprintf(buf, 100, "%d", num_disambig_seen);
         num_disambig_seen++;
         std::string sym = disambig_prefix + buf;
         s = ans->AddSymbol(sym);
-        if (s != i)
-          KALDI_ERR << "Disambig symbol "<< sym <<" already in vocab\n";  // should never happen.
+        if (s != i) {
+          std::cerr << "Disambig symbol "<< sym <<" already in vocab\n";  // should never happen.
+          exit(1);
+        }
       }
     } else {
       // is a phone-context-window.
       std::string newsym;
       for (size_t j = 0; j < info[i].size(); j++) {
         std::string phonesym = phones_symtab.Find(info[i][j]);
-        if (phonesym == "")
-          KALDI_ERR << "CreateILabelInfoSymbolTable: symbol "
+        if (phonesym == "") {
+          std::cerr << "CreateILabelInfoSymbolTable: symbol "
                     << info[i][j] << " not in phone symbol-table.";
+          exit(1);
+        }
         if (j != 0) newsym += separator;
         newsym += phonesym;
       }
       int64 s = ans->AddSymbol(newsym);
       if (s != static_cast<int64>(i)) {
-        KALDI_ERR << "CreateILabelInfoSymbolTable: some problem with duplicate symbols.";
+        std::cerr << "CreateILabelInfoSymbolTable: some problem with duplicate symbols.";
+        exit(1);
       }
     }
   }
   return ans;
 }
 
-inline void ComposeContext(std::vector<int32> &disambig_syms_in,
+inline void ComposeContext(vector<int32> &disambig_syms_in,
                            int N, int P,
                            VectorFst<StdArc> *ifst,
                            VectorFst<StdArc> *ofst,
-                           std::vector<vector<int32> > *ilabels_out) {
+                           vector<vector<int32> > *ilabels_out) {
   assert(ifst != NULL && ofst != NULL);
   assert(N > 0);
   assert(P>=0);
   assert(P < N);
 
-  std::vector<int32> disambig_syms(disambig_syms_in);
+  vector<int32> disambig_syms(disambig_syms_in);
   std::sort(disambig_syms.begin(), disambig_syms.end());
-  std::vector<int32> all_syms;
+  vector<int32> all_syms;
   GetInputSymbols(*ifst, false/*no eps*/, &all_syms);
-  std::vector<int32> phones;
+  vector<int32> phones;
   for (size_t i = 0; i < all_syms.size(); i++)
     if (!std::binary_search(disambig_syms.begin(), disambig_syms.end(), all_syms[i]))
       phones.push_back(all_syms[i]);

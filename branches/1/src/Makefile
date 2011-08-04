@@ -33,8 +33,3 @@ $(SUBDIRS) : .phony
 .phony:
 
 
-# % is a wildcard that matches targets "gmm", "fstext" etc.
-# $@ is the thing that % expanded to (e.g. utils).  we
-# cd to there and 'make'.
-
-

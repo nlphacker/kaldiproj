@@ -23,6 +23,36 @@
 
 namespace fst
 {
+
+// test that determinization proceeds correctly on general
+// FSTs (not guaranteed determinzable, but we use the
+// max-states option to stop it getting out of control).
+template<class Arc> void TestDeterminizeGeneral() {
+  int max_states = 100; // don't allow more det-states than this.
+  for(int i = 0; i < 100; i++) {
+    VectorFst<Arc> *fst = RandFst<Arc>();
+    std::cout << "FST before determinizing is:\n";
+    {
+      FstPrinter<Arc> fstprinter(*fst, NULL, NULL, NULL, false, true);
+      fstprinter.Print(&std::cout, "standard output");
+    }
+    VectorFst<Arc> ofst;
+    try {
+      DeterminizeStar<Arc>(*fst, &ofst, kDelta, NULL, max_states);
+      std::cout << "FST after determinizing is:\n";
+      {
+        FstPrinter<Arc> fstprinter(ofst, NULL, NULL, NULL, false, true);
+        fstprinter.Print(&std::cout, "standard output");
+      }
+      assert(RandEquivalent(*fst, ofst, 5/*paths*/, 0.01/*delta*/, rand()/*seed*/, 100/*path length, max*/));      
+    } catch (...) {
+      std::cout << "Failed to determinize* this FST (probably not determinizable)\n";
+    }
+    delete fst;
+  }
+}
+
+
 // Don't instantiate with log semiring, as RandEquivalent may fail.
 template<class Arc>  void TestDeterminize() {
   typedef typename Arc::Label Label;
@@ -150,6 +180,19 @@ template<class Arc>  void TestDeterminize() {
 
   delete fst;
   delete fst_copy_orig;
+}
+
+// Don't call this-- the test will fail due to the FST being non-functional.
+template<class Arc>  void TestDeterminize2() {
+  for(int i = 0; i < 10; i++) {
+    RandFstOptions opts;
+    opts.acyclic = true;
+    VectorFst<Arc>* ifst = RandFst<Arc>(opts);
+    VectorFst<Arc> ofst;
+    Determinize(*ifst, &ofst);
+    assert(RandEquivalent(*ifst, ofst, 5, 0.01, rand(), 100));
+    delete ifst;
+  }
 }
 
 template<class Arc>  void TestPush() {
@@ -419,7 +462,7 @@ template<class Arc, class inttype> void TestStringRepository() {
   }
 
   for (int i = 0;i < N;i++) {
-    std::vector<Label> tmpv;
+    vector<Label> tmpv;
     tmpv.push_back(10);  // just put in garbage.
     sr.SeqOfId(ids[i], &tmpv);
     assert(tmpv == strings[i]);
@@ -452,7 +495,9 @@ int main() {
     // Not for use with char, but this helps reveal some kinds of bugs.
     fst::TestStringRepository<fst::StdArc, unsigned char>();
     fst::TestStringRepository<fst::StdArc, char>();
+    fst::TestDeterminizeGeneral<fst::StdArc>();
     fst::TestDeterminize<fst::StdArc>();
+    //fst::TestDeterminize2<fst::StdArc>();
     fst::TestPush<fst::StdArc>();
     fst::TestMinimize<fst::StdArc>();
   }
