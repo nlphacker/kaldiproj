@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
         "Usage:  sgmm-decode-faster [options] <model-in> <fst-in> "
         "<features-rspecifier> <words-wspecifier> [alignments-wspecifier]\n";
     ParseOptions po(usage);
+    bool allow_partial = true;
     BaseFloat acoustic_scale = 0.1;
     BaseFloat log_prune = 5.0;
     string word_syms_filename, gselect_rspecifier, spkvecs_rspecifier,
@@ -63,6 +64,8 @@ int main(int argc, char *argv[]) {
                 "rspecifier for speaker vectors");
     po.Register("utt2spk", &utt2spk_rspecifier,
                 "rspecifier for utterance to speaker map");
+    po.Register("allow-partial", &allow_partial,
+                "Produce output even when final state was not reached");
     po.Read(argc, argv);
 
     if (po.NumArgs() < 4 || po.NumArgs() > 5) {
@@ -86,33 +89,19 @@ int main(int argc, char *argv[]) {
     }
 
     Int32VectorWriter words_writer(words_wspecifier);
-    Int32VectorWriter alignment_writer;
-    if (alignment_wspecifier != "")
-      if (!alignment_writer.Open(alignment_wspecifier))
-        KALDI_ERR << "Failed to open alignments output.";
+    Int32VectorWriter alignment_writer(alignment_wspecifier);
 
     fst::SymbolTable *word_syms = NULL;
-    if (word_syms_filename != "") {
-      word_syms = fst::SymbolTable::ReadText(word_syms_filename);
-      if (!word_syms)
+    if (word_syms_filename != "") 
+      if (!(word_syms = fst::SymbolTable::ReadText(word_syms_filename)))
         KALDI_EXIT << "Could not read symbol table from file "
                    << word_syms_filename;
-    }
 
-    RandomAccessInt32VectorVectorReader gselect_reader;
-    if (!gselect_rspecifier.empty())
-      if (!gselect_reader.Open(gselect_rspecifier))
-        KALDI_ERR << "Cannot open stream to read gaussian-selection indices";
+    RandomAccessInt32VectorVectorReader gselect_reader(gselect_rspecifier);
 
-    RandomAccessTokenReader utt2spk_reader;
-    if (!utt2spk_rspecifier.empty())  // per-speaker adaptation
-      if (!utt2spk_reader.Open(utt2spk_rspecifier))
-        KALDI_ERR << "Could not open the utt2spk map: " << utt2spk_rspecifier;
+    RandomAccessTokenReader utt2spk_reader(utt2spk_rspecifier);
 
-    RandomAccessBaseFloatVectorReader spkvecs_reader;
-    if (!spkvecs_rspecifier.empty())
-      if (!spkvecs_reader.Open(spkvecs_rspecifier))
-        KALDI_ERR << "Cannot read speaker vectors.";
+    RandomAccessBaseFloatVectorReader spkvecs_reader(spkvecs_rspecifier);
 
     SequentialBaseFloatMatrixReader feature_reader(feature_rspecifier);
 
@@ -189,18 +178,14 @@ int main(int argc, char *argv[]) {
                                            log_prune, acoustic_scale);
       decoder.Decode(&sgmm_decodable);
 
-      KALDI_LOG << "Length of file is " << features.NumRows();
-
       VectorFst<StdArc> decoded;  // linear FST.
-      bool saw_endstate = decoder.GetOutput(true,  // consider only final states
-                                            &decoded);
 
-      if (saw_endstate || decoder.GetOutput(false, &decoded)) {
-        num_success++;
-        if (!saw_endstate) {
+      if ( (allow_partial || decoder.ReachedFinal())
+           && decoder.GetBestPath(&decoded) ) {
+        if (!decoder.ReachedFinal())
           KALDI_WARN << "Decoder did not reach end-state, "
-                     << "outputting partial traceback.";
-        }
+                     << "outputting partial traceback since --allow-partial=true";
+        num_success++;
         std::vector<int32> alignment;
         std::vector<int32> words;
         StdArc::Weight weight;
@@ -224,8 +209,8 @@ int main(int argc, char *argv[]) {
         BaseFloat like = -weight.Value();
         tot_like += like;
         KALDI_LOG << "Log-like per frame for utterance " << utt << " is "
-                  << (like / features.NumRows());
-
+                  << (like / features.NumRows()) << " over "
+                  << features.NumRows() << " frames.";
       } else {
         num_fail++;
         KALDI_WARN << "Did not successfully decode utterance " << utt
@@ -240,6 +225,8 @@ int main(int argc, char *argv[]) {
               << num_fail;
     KALDI_LOG << "Overall log-likelihood per frame = " << (tot_like/frame_count)
               << " over " << frame_count << " frames.";
+
+    if (word_syms) delete word_syms;
     delete decode_fst;
     if (num_success != 0)
       return 0;

@@ -1,4 +1,4 @@
-// bin/decode-faster.cc
+// bin/decode-faster-mapped.cc
 
 // Copyright 2009-2011  Microsoft Corporation
 
@@ -25,8 +25,7 @@
 #include "decoder/decodable-matrix.h"
 #include "util/timer.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   try {
     using namespace kaldi;
     typedef kaldi::int32 int32;
@@ -37,17 +36,18 @@ int main(int argc, char *argv[])
     const char *usage =
         "Decode, reading log-likelihoods as matrices\n"
         " (model is needed only for the integer mappings in its transition-model)\n"
-        "Usage:   decode-faster [options] model-in fst-in loglikes-rspecifier words-wspecifier [alignments-wspecifier]\n";
+        "Usage:   decode-faster-mapped [options] model-in fst-in "
+        "loglikes-rspecifier words-wspecifier [alignments-wspecifier]\n";
     ParseOptions po(usage);
     bool binary = false;
     BaseFloat acoustic_scale = 0.1;
-
+    bool allow_partial = true;
     std::string word_syms_filename;
     FasterDecoderOptions decoder_opts;
     decoder_opts.Register(&po, true);  // true == include obscure settings.
     po.Register("binary", &binary, "Write output in binary mode");
     po.Register("acoustic-scale", &acoustic_scale, "Scaling factor for acoustic likelihoods");
-
+    po.Register("allow-partial", &allow_partial, "Produce output even when final state was not reached");
     po.Register("word-symbol-table", &word_syms_filename, "Symbol table for words [for debug output]");
 
     po.Read(argc, argv);
@@ -72,10 +72,7 @@ int main(int argc, char *argv[])
 
     Int32VectorWriter words_writer(words_wspecifier);
 
-    Int32VectorWriter alignment_writer;
-    if (alignment_wspecifier != "")
-      if (!alignment_writer.Open(alignment_wspecifier))
-        KALDI_ERR << "Failed to open alignments output.";
+    Int32VectorWriter alignment_writer(alignment_wspecifier);
 
     fst::SymbolTable *word_syms = NULL;
     if (word_syms_filename != "") {
@@ -123,15 +120,13 @@ int main(int argc, char *argv[])
       decoder.Decode(&decodable);
 
       VectorFst<StdArc> decoded;  // linear FST.
-      bool saw_endstate = decoder.GetOutput(true,  // consider only final states.
-                                            &decoded);
 
-      if (saw_endstate || decoder.GetOutput(false,
-                                           &decoded)) {
+      if ( (allow_partial || decoder.ReachedFinal())
+           && decoder.GetBestPath(&decoded) ) {
         num_success++;
-        if (!saw_endstate) {
+        if (!decoder.ReachedFinal())
           KALDI_WARN << "Decoder did not reach end-state, outputting partial traceback.";
-        }
+
         std::vector<int32> alignment;
         std::vector<int32> words;
         StdArc::Weight weight;
@@ -174,6 +169,7 @@ int main(int argc, char *argv[])
     KALDI_LOG << "Overall log-likelihood per frame is " << (tot_like/frame_count)
               << " over " << frame_count << " frames.";
 
+    if (word_syms) delete word_syms;
     delete decode_fst;
     if (num_success != 0) return 0;
     else return 1;

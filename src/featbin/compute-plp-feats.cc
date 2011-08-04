@@ -21,13 +21,12 @@
 #include "feat/wave-reader.h"
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   try {
     using namespace kaldi;
     const char *usage =
         "Create PLP feature files.\n"
-        " Usage:  compute-plp-feats [options...] <wav-rspecifier> <feats-wspecifier>\n";
+        "Usage:  compute-plp-feats [options...] <wav-rspecifier> <feats-wspecifier>\n";
 
     // construct all the global objects
     ParseOptions po(usage);

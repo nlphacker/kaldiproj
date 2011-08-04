@@ -26,8 +26,7 @@
 
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   try {
     using namespace kaldi;
     typedef kaldi::int32 int32;
@@ -37,9 +36,9 @@ int main(int argc, char *argv[])
 
     const char *usage =
         "Align features given [GMM-based] models.\n"
-        "Usage:   align-gmm [options] tree-in model-in lexicon-fst-in feature-rspecifier transcriptions-rspecifier alignments-wspecifier\n"
+        "Usage:   gmm-align [options] tree-in model-in lexicon-fst-in feature-rspecifier transcriptions-rspecifier alignments-wspecifier\n"
         "e.g.: \n"
-        " align-gmm tree 1.mdl lex.fst scp:train.scp ark:train.tra ark:1.ali\n";
+        " gmm-align tree 1.mdl lex.fst scp:train.scp ark:train.tra ark:1.ali\n";
     ParseOptions po(usage);
     bool binary = false;
     BaseFloat beam = 200.0;
@@ -140,15 +139,15 @@ int main(int argc, char *argv[])
         KALDI_LOG << "Length of file is "<<features.NumRows();
 
         VectorFst<StdArc> decoded;  // linear FST.
-        bool ans = decoder.GetOutput(true,  // consider only final states.
-                                     &decoded);
+        bool ans = decoder.ReachedFinal() // consider only final states.
+            && decoder.GetBestPath(&decoded);  
         if (!ans && retry_beam != 0.0) {
           KALDI_WARN << "Retrying utterance " << key << " with beam " << retry_beam;
           decode_opts.beam = retry_beam;
           decoder.SetOptions(decode_opts);
           decoder.Decode(&gmm_decodable);
-          ans = decoder.GetOutput(true,  // consider only final states.
-                                  &decoded);
+          ans = decoder.ReachedFinal() // consider only final states.
+              && decoder.GetBestPath(&decoded);  
           decode_opts.beam = beam;
           decoder.SetOptions(decode_opts);
         }
