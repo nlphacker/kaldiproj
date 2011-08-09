@@ -1,0 +1,28 @@
+
+
+Example of debug command with valgrind:
+in matrix/
+ valgrind  ./matrix-lib-test
+
+# or if there are errors the following options may be useful:
+ valgrind  --leak-check=full --db-attach=yes ./matrix-lib-test
+
+The easiest way to run valgrind, however, is "make valgrind" which automatically
+runs all the tests.  It will fail if valgrind is not happy.  Then you should
+manually run valgrind on whichever one failed (which you can figure out by
+looking at valgrind.out in the last directory, and looking for the last
+filename *-test that was printed).
+
+
+---
+ For emacs users:
+  ensure proper indentation it may be helpful to copy
+     http://google-styleguide.googlecode.com/svn/trunk/google-c-style.el
+  to your home directory as ".google-c-style.el", and add to your .emacs file the lines:
+\verbatim
+  (load-file "~/.google-c-style.el")
+  (add-hook 'c-mode-common-hook 'google-set-c-style)
+  (add-hook 'c-mode-common-hook 'google-make-newline-indent)
+\endverbatim
+
+--
