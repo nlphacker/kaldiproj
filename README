@@ -2,8 +2,6 @@
 For documentation see http://kaldi.sf.net
 To check out the code (if you have svn installed), type
 
-svn co https://kaldi.svn.sourceforge.net/svnroot/kaldi/trunk kaldi
-
-or if you want version 1 (this will be more stable but less current), do
-
-svn co https://kaldi.svn.sourceforge.net/svnroot/kaldi/branches/1 kaldi-1
+Please see
+ http://kaldi.sourceforge.net/install.html
+for installation instructions
