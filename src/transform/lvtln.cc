@@ -1,6 +1,7 @@
 // transform/lvtln.cc
 
 // Copyright 2009-2011 Microsoft Corporation
+//                2014 Johns Hopkins University (author: Daniel Povey)
 
 // See ../../COPYING for clarification regarding multiple authors
 //
@@ -35,33 +36,11 @@ LinearVtln::LinearVtln(int32 dim, int32 num_classes, int32 default_class) {
   }
   logdets_.clear();
   logdets_.resize(num_classes, 0.0);
+  warps_.clear();
+  warps_.resize(num_classes, 1.0);
 } // namespace kaldi
 
 
-BaseFloat LinearVtln::GetDefaultAuxf(const FmllrDiagGmmAccs &speaker_stats) const {
-  Matrix<BaseFloat> default_mat(Dim(), Dim()+1);
-  default_mat.SetUnit();
-  return FmllrAuxFuncDiagGmm(default_mat, speaker_stats);
-}
-
-BaseFloat LinearVtln::GetAuxf(const FmllrDiagGmmAccs &speaker_stats,
-                              BaseFloat logdet_scale,
-                              int32 class_idx,
-                              const VectorBase<BaseFloat> &offset) const {
-  assert(class_idx >= 0 && class_idx < NumClasses());
-  int32 dim = Dim();
-
-  Matrix<BaseFloat> mat(dim, dim+1);
-  {  // construct the fMLLR matrix "mat"
-    SubMatrix<BaseFloat> square(mat, 0, dim, 0, dim);
-    square.CopyFromMat(A_[class_idx]);
-    for (int32 i = 0; i < dim; i++) mat(i, dim) = offset(i);
-  }
-  BaseFloat extra_logdet = 0.0;
-  if (logdet_scale != 1.0) extra_logdet = logdets_[class_idx]*(logdet_scale-1.0);
-  return FmllrAuxFuncDiagGmm(mat, speaker_stats)
-      + speaker_stats.beta_*extra_logdet;
-}
 
 void LinearVtln::Read(std::istream &is, bool binary) {
   int32 sz;
@@ -69,9 +48,14 @@ void LinearVtln::Read(std::istream &is, bool binary) {
   ReadBasicType(is, binary, &sz);
   A_.resize(sz);
   logdets_.resize(sz);
+  warps_.resize(sz);
   for (int32 i = 0; i < sz; i++) {
+    ExpectToken(is, binary, "<A>");
     A_[i].Read(is, binary);
+    ExpectToken(is, binary, "<logdet>");
     ReadBasicType(is, binary, &(logdets_[i]));
+    ExpectToken(is, binary, "<warp>");
+    ReadBasicType(is, binary, &(warps_[i]));
   }
   ExpectToken(is, binary, "</LinearVtln>");
 }
@@ -80,11 +64,16 @@ void LinearVtln::Write(std::ostream &os, bool binary) const {
   WriteToken(os, binary, "<LinearVtln>");
   if(!binary) os << "\n";
   int32 sz = A_.size();
-  assert(static_cast<size_t>(sz) == logdets_.size());
+  KALDI_ASSERT(static_cast<size_t>(sz) == logdets_.size());
+  KALDI_ASSERT(static_cast<size_t>(sz) == warps_.size());
   WriteBasicType(os, binary, sz);
   for (int32 i = 0; i < sz; i++) {
+    WriteToken(os, binary, "<A>");
     A_[i].Write(os, binary);
+    WriteToken(os, binary, "<logdet>");
     WriteBasicType(os, binary, logdets_[i]);
+    WriteToken(os, binary, "<warp>");
+    WriteBasicType(os, binary, warps_[i]);
     if(!binary) os << "\n";
   }
   WriteToken(os, binary, "</LinearVtln>");
@@ -94,6 +83,7 @@ void LinearVtln::Write(std::ostream &os, bool binary) const {
 /// Compute the transform for the speaker.
 void LinearVtln::ComputeTransform(const FmllrDiagGmmAccs &accs,
                                   std::string norm_type,  // "none", "offset", "diag"
+                                  BaseFloat logdet_scale,
                                   MatrixBase<BaseFloat> *Ws,  // output fMLLR transform, should be size dim x dim+1
                                   int32 *class_idx,  // the transform that was chosen...
                                   BaseFloat *logdet_out,
@@ -104,7 +94,7 @@ void LinearVtln::ComputeTransform(const FmllrDiagGmmAccs &accs,
   if (norm_type != "none"  && norm_type != "offset" && norm_type != "diag")
     KALDI_ERR << "LinearVtln::ComputeTransform, norm_type should be "
         "one of \"none\", \"offset\" or \"diag\"";
-
+  
   if (accs.beta_ == 0.0) {
     KALDI_WARN << "no stats, returning default transform";
     *class_idx = default_class_;
@@ -116,7 +106,7 @@ void LinearVtln::ComputeTransform(const FmllrDiagGmmAccs &accs,
     if (objf_impr) *objf_impr = 0;
     if (count) *count = 0;
   }
-
+  
   Matrix<BaseFloat> best_transform(dim, dim+1);
   best_transform.SetUnit();
   BaseFloat old_objf = FmllrAuxFuncDiagGmm(best_transform, accs),
@@ -137,6 +127,10 @@ void LinearVtln::ComputeTransform(const FmllrDiagGmmAccs &accs,
     ComposeTransforms(trans, A_[i], false, &product);
 
     BaseFloat objf = FmllrAuxFuncDiagGmm(product, accs);
+
+    if (logdet_scale != 1.0)
+      objf += accs.beta_ * (logdet_scale - 1.0) * logdets_[i];
+    
     if (objf > best_objf) {
       best_objf = objf;
       best_class = i;
@@ -161,6 +155,16 @@ void LinearVtln::SetTransform(int32 i, const MatrixBase<BaseFloat> &transform) {
   logdets_[i] = A_[i].LogDet();
 }
 
+void LinearVtln::SetWarp(int32 i, BaseFloat warp) {
+  KALDI_ASSERT(i >= 0 && i < NumClasses());
+  KALDI_ASSERT(warps_.size() == static_cast<size_t>(NumClasses()));
+  warps_[i] = warp;
+}
+
+BaseFloat LinearVtln::GetWarp(int32 i) const {
+  KALDI_ASSERT(i >= 0 && i < NumClasses());
+  return warps_[i];
+}
 
 void LinearVtln::GetTransform(int32 i, MatrixBase<BaseFloat> *transform) const {
   KALDI_ASSERT(i >= 0 && i < NumClasses());
