@@ -1,0 +1,6 @@
+git clone https://github.com/nlphacker/kaldiproj.git
+
+sudo apt-get install build-essential
+
+sudo apt-get install autoconf automake gcc libtool subversion libatlas-dev libatlas-base-dev gfortran
+
