@@ -1,6 +1,35 @@
-git clone https://github.com/nlphacker/kaldiproj.git
+1. import kaldi project @2014.08.03 from https://svn.code.sf.net/p/kaldi/code/
+
+
+2. steps to build
+
+build envivroment: ubuntu 14.04 
 
 sudo apt-get install build-essential
 
 sudo apt-get install autoconf automake gcc libtool subversion libatlas-dev libatlas-base-dev gfortran
 
+sudo apt-get install zlib1g-dev 
+
+git clone https://github.com/nlphacker/kaldiproj.git
+
+cd kaldiproj
+cd tools
+	make
+
+cd ..
+cd src
+	./configure
+		gcc 4.8.2 has bug it complains	
+		sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+		sudo apt-get update
+		sudo apt-get install g++-4.9
+
+	make all
+
+
+
+
+
+3. referrence
+http://blog.csdn.net/wbgxx333/article/details/22311447
