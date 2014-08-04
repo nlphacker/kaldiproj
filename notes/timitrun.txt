@@ -1,0 +1,16 @@
+Steps:
+
+1. get data from internet
+	wget http://www.fon.hum.uva.nl/david/ma_ssp/2007/TIMIT/ -m
+
+2. cd egs/timit/s5
+   modify cmd.sh to use local run 
+   ./run.sh
+
+
+
+Issues:
+1. awk: function gensub never defined
+fix: sudo apt-get install gawk
+
+

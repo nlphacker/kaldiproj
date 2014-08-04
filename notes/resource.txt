@@ -1,0 +1,16 @@
+*Useful resource for ASR
+
+Kaldi+DNN
+	http://www.cs.cmu.edu/~ymiao/kaldipdnn.html
+
+ASR Blog
+	http://blog.csdn.net/u010384318/article/category/1514597
+
+General ML
+	http://www.52ml.net/
+
+Person
+	http://danielpovey.com/
+
+Coruse
+	http://www.inf.ed.ac.uk/teaching/courses/asr
