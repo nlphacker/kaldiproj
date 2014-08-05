@@ -5,7 +5,7 @@ Kaldi+DNN
 
 ASR Blog
 	http://blog.csdn.net/u010384318/article/category/1514597
-
+	http://blog.csdn.net/wbgxx333/article/details/19930409
 General ML
 	http://www.52ml.net/
 
