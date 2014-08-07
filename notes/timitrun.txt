@@ -7,7 +7,7 @@ Steps:
    modify cmd.sh to use local run 
    ./run.sh
 
-
+4. bash RESULTS
 
 Issues:
 1. awk: function gensub never defined
@@ -21,4 +21,5 @@ fix: create a dummy getopts.pl and flush.pl under s5 folder seems to work
 
 3. DNN error: gzip: exp/tri3_ali/ali.{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30}.gz: No such file or directory
 
-fix: 
+fix: rm /bin/sh
+     ln -s /bin/bash /bin/sh
