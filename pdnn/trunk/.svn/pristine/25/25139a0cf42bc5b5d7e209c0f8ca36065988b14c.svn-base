@@ -1,0 +1,35 @@
+#!/bin/bash
+
+
+# run-dnn.sh
+%WER 22.38 [ 3370 / 15057, 337 ins, 1124 del, 1909 sub ] exp_pdnn/dnn/decode_dev/wer_3
+%WER 24.02 [ 1733 / 7215, 210 ins, 500 del, 1023 sub ] exp_pdnn/dnn/decode_test/wer_2
+
+# run-bnf-tandem.sh
+# GMM
+%WER 21.62 [ 3255 / 15057, 451 ins, 943 del, 1861 sub ] exp_pdnn/bnf_tandem/tri4/decode_dev/wer_7
+%WER 22.19 [ 1601 / 7215, 207 ins, 464 del, 930 sub ] exp_pdnn/bnf_tandem/tri4/decode_test/wer_7
+# bMMI
+%WER 21.23 [ 3197 / 15057, 474 ins, 879 del, 1844 sub ] exp_pdnn/bnf_tandem/tri4_mmi_b0.1/decode_dev_it1/wer_7
+%WER 21.17 [ 3188 / 15057, 488 ins, 850 del, 1850 sub ] exp_pdnn/bnf_tandem/tri4_mmi_b0.1/decode_dev_it2/wer_7
+%WER 21.27 [ 3202 / 15057, 480 ins, 867 del, 1855 sub ] exp_pdnn/bnf_tandem/tri4_mmi_b0.1/decode_dev_it3/wer_8
+%WER 21.21 [ 3193 / 15057, 486 ins, 854 del, 1853 sub ] exp_pdnn/bnf_tandem/tri4_mmi_b0.1/decode_dev_it4/wer_8
+%WER 22.08 [ 1593 / 7215, 196 ins, 470 del, 927 sub ] exp_pdnn/bnf_tandem/tri4_mmi_b0.1/decode_test_it1/wer_8
+%WER 22.31 [ 1610 / 7215, 217 ins, 454 del, 939 sub ] exp_pdnn/bnf_tandem/tri4_mmi_b0.1/decode_test_it2/wer_8
+%WER 22.54 [ 1626 / 7215, 234 ins, 440 del, 952 sub ] exp_pdnn/bnf_tandem/tri4_mmi_b0.1/decode_test_it3/wer_8
+%WER 22.56 [ 1628 / 7215, 227 ins, 455 del, 946 sub ] exp_pdnn/bnf_tandem/tri4_mmi_b0.1/decode_test_it4/wer_9
+# SGMM
+%WER 20.50 [ 3086 / 15057, 332 ins, 985 del, 1769 sub ] exp_pdnn/bnf_tandem/sgmm5a/decode_dev/wer_6
+%WER 22.13 [ 1597 / 7215, 181 ins, 512 del, 904 sub ] exp_pdnn/bnf_tandem/sgmm5a/decode_test/wer_6
+
+
+# run-dnn-fbank.sh
+%WER 24.90 [ 3749 / 15057, 470 ins, 1072 del, 2207 sub ] exp_pdnn/dnn_fbank/decode_dev/wer_3
+%WER 26.47 [ 1910 / 7215, 300 ins, 473 del, 1137 sub ] exp_pdnn/dnn_fbank/decode_test/wer_2
+
+# run-cnn.sh. This is the fast version of CNN, with "--use-fast true". This version achieves a 2.4x speed up, 
+# while at the same time giving comparable dev and better test WER% compared with the old version.
+# You can switch to the old version simply by eliminating "--use-fast true"
+%WER 21.69 [ 3266 / 15057, 367 ins, 1020 del, 1879 sub ] exp_pdnn/cnn/decode_dev/wer_2
+%WER 22.41 [ 1617 / 7215, 172 ins, 508 del, 937 sub ] exp_pdnn/cnn/decode_test/wer_2
+

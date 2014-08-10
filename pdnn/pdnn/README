@@ -1,0 +1,35 @@
+PDNN: Yet Another Python Toolkit for Deep Neural Networks
+
+Website: http://www.cs.cmu.edu/~ymiao/pdnntk.html
+
+== Author ==
+
+Yajie Miao, Carnegie Mellon University
+ymiao@cs.cmu.edu
+
+== Download ==
+
+PDNN is publicly available from its Sourceforge repository. Download all the source codes by
+svn co svn://svn.code.sf.net/p/kaldipdnn/code-0/trunk/pdnn pdnn
+
+== Requirements ==
+
+PDNN is a lightweight deep learning toolkit developed under the Theano environment. There are two requirements for PDNN to work:
+1. A GPU card should be available on your computing machine.
+2. Theano should be installed properly.
+
+== Commands ==
+
+All the PDNN functionalities are called via the top level commands. Details on their arguments can be found on the website. The commands include:
+run_DNN.py -- SGD fine-tuning of DNNs; including implementations of maxout and dropout
+run_SDA.py -- pre-training of DNN layers using stacked denoising autoencoders (SdAs)
+run_CNN.py -- convolutional neural networks
+run_CnnFeat.py -- generate convolution outputs from convolution layers
+
+== Directory Structure ==
+
+io_func -- pfile reading functions; various network IO functions; network format conversion, i.e., from raw to Kaldi
+layers  -- various layer types: convolution, fully-connected, denoising autoencoder, maxout, logistic regression
+models  -- convolutional networks, deep networks, dropout networks, stacked denoising autoencoders
+utils   -- various utility functions: learning rates, argument parsing, etc
+
